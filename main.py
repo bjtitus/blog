@@ -26,6 +26,7 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 DOPPLR_TOKEN = getattr(settings, "DOPPLR_TOKEN", None)
+BRIGHTKITE_TOKEN = getattr(settings, "BRIGHTKITE_TOKEN", None)
 MAPS_API_KEY = getattr(settings, "MAPS_API_KEY", None)
 SHOW_CURRENT_CITY = getattr(settings, "SHOW_CURRENT_CITY", False)
 TITLE = getattr(settings, "TITLE", "Blog")
@@ -97,15 +98,25 @@ class BaseRequestHandler(webapp.RequestHandler):
         key = "current_city/now"
         current_city = memcache.get(key)
         if not current_city:
-            response = urlfetch.fetch("https://www.dopplr.com/api/traveller_info?format=js&token=" + DOPPLR_TOKEN)
-            if response.status_code == 200:
-                data = simplejson.loads(response.content)
-                current_city = data["traveller"]["current_city"]
-                current_city["maps_api_key"] = MAPS_API_KEY
-                memcache.set(key, current_city, 60*60*5)
-            else:
-                current_city = None
-        return current_city
+			if DOPPLR_TOKEN != "":
+				response = urlfetch.fetch("https://www.dopplr.com/api/traveller_info?format=js&token=" + BRIGHTKITE_TOKEN)
+				if response.status_code == 200:
+					data = simplejson.loads(response.content)
+					current_city = data["traveller"]["current_city"]
+					current_city["maps_api_key"] = MAPS_API_KEY
+					memcache.set(key, current_city, 60*60*5)
+				else:
+					current_city = None
+			elif BRIGHTKITE_TOKEN != "":
+				response = urlfetch.fetch("http://brightkite.com/people/" + BRIGHTKITE_TOKEN + "?format=json")
+				if response.status_code == 200:
+					data = simplejson.loads(response.content)
+					current_city = data["place"]
+					current_city["maps_api_key"] = MAPS_API_KEY
+					memcache.set(key, current_city, 60*60*5)
+				else:
+					current_city = None
+			return current_city
 
     def get_recent_entries(self):
         key = "entries/recent"
