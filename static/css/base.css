@@ -42,13 +42,14 @@ form {
 }
 
 #header {
-  background-color: #bed7f5;
+  background-color: #CDDFF6;
+  border-bottom: 1px solid #8d8d8d;
   height: 56px;
   position: relative;
 }
 
 #logo {
-  font-size: 16pt;
+  font-size: 25pt;
   padding-left: 30px;
   padding-top: 15px;
 }
@@ -158,6 +159,7 @@ a.delete {
 
 .entry.full .date {
   margin-top: 0.25em;
+  font-size: 10.5pt;
 }
 
 .entry.full .body {
