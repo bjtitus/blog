@@ -428,6 +428,7 @@ class NewEntryHandler(BaseRequestHandler):
                     slug=slug,
                 )
             if self.request.get("public") == "on":
+				#FIXME: Only updates after a second update since entry.updated hasn't been changed yet
                 if entry.public == False:
                     entry.published = entry.updated
                 entry.public = True
