@@ -78,6 +78,7 @@ class Entry(db.Model):
     published = db.DateTimeProperty(auto_now_add=True)
     updated = db.DateTimeProperty(auto_now=True)
     tags = db.ListProperty(db.Category)
+    public = db.BooleanProperty(default=True)
 
 
 class EntryForm(djangoforms.ModelForm):
@@ -122,7 +123,7 @@ class BaseRequestHandler(webapp.RequestHandler):
         key = "entries/recent"
         entries = memcache.get(key)
         if not entries:
-            entries = db.Query(Entry).order("-published").fetch(limit=5)
+            entries = db.Query(Entry).filter("public = ", True).order("-published").fetch(limit=5)
             memcache.set(key, list(entries))
         return entries
 
@@ -130,7 +131,7 @@ class BaseRequestHandler(webapp.RequestHandler):
         key = "entries/main"
         entries = memcache.get(key)
         if not entries:
-            entries = db.Query(Entry).order("-published").fetch(limit=10)
+            entries = db.Query(Entry).filter("public = ", True).order("-published").fetch(limit=10)
             memcache.set(key, list(entries))
         return entries
 
@@ -138,7 +139,7 @@ class BaseRequestHandler(webapp.RequestHandler):
         key = "entries/archive"
         entries = memcache.get(key)
         if not entries:
-            entries = db.Query(Entry).order("-published")
+            entries = db.Query(Entry).filter("public = ", True).order("-published")
             memcache.set(key, list(entries))
         return entries
 
@@ -308,6 +309,18 @@ class ArchivePageHandler(BaseRequestHandler):
         self.render("archive.html", extra_context)
 
 
+class SavedPageHandler(BaseRequestHandler):
+	def get(self):
+		extra_context = {
+			"entries": self.get_saved_entries(),
+		}
+		self.render("saved.html", extra_context)
+		
+	def get_saved_entries(self):
+		key = "entries/saved"
+		entries = db.Query(Entry).filter("public = ", False).order("-published")
+		return entries
+
 class DeleteEntryHandler(BaseRequestHandler):
     @admin
     def post(self):
@@ -336,8 +349,8 @@ class EntryPageHandler(BaseRequestHandler):
         extra_context = {
             "entries": [entry], # So we can use the same template for everything
             "entry": entry, # To easily pull out the title
-            "previous": db.Query(Entry).filter("published <", entry.published).order("-published").get(),
-            "next": db.Query(Entry).filter("published >", entry.published).order("published").get(),
+            "previous": db.Query(Entry).filter("public = ", True).filter("published <", entry.published).order("-published").get(),
+            "next": db.Query(Entry).filter("public = ", True).filter("published >", entry.published).order("published").get(),
             "invalid": self.request.get("invalid", False),
         }
         self.render("entry.html", extra_context)
@@ -358,7 +371,7 @@ class MainPageHandler(BaseRequestHandler):
         if not offset:
             entries = self.get_main_page_entries()
         else:
-            entries = db.Query(Entry).order("-published").fetch(limit=10, offset=offset)
+            entries = db.Query(Entry).filter("public = ", True).order("-published").fetch(limit=10, offset=offset)
         if not entries and offset > 0:
             return self.redirect("/")
         extra_context = {
@@ -414,6 +427,12 @@ class NewEntryHandler(BaseRequestHandler):
                     title=self.request.get("title"),
                     slug=slug,
                 )
+            if self.request.get("public") == "on":
+                if entry.public == False:
+                    entry.published = entry.updated
+                entry.public = True
+            else:
+	           entry.public = False
             entry.tags = self.get_tags_argument("tags")
             entry.put()
             self.kill_entries_cache(slug=entry.slug if key else None,
@@ -461,6 +480,7 @@ class OpenSearchHandler(BaseRequestHandler):
 application = webapp.WSGIApplication([
     ("/", MainPageHandler),
     ("/archive/?", ArchivePageHandler),
+	("/saved", SavedPageHandler),
     ("/delete/?", DeleteEntryHandler),
     ("/edit/([\w-]+)/?", NewEntryHandler),
     ("/e/([\w-]+)/?", EntryPageHandler),

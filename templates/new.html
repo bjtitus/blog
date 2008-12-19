@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block body %}
+	{% block notify_message %}<div style="border: 1px solid #999;background-color: red;padding: 3px;text-align: center;font-size: 9pt;margin-bottom: 5px">You have <a href="saved.html">5 saved posts</a>.</div>{% endblock %}
     <form id="new" method="post">
         <table>
             {{ form.as_table }}
