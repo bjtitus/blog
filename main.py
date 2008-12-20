@@ -160,10 +160,12 @@ class BaseRequestHandler(webapp.RequestHandler):
             memcache.set(key, list(entries))
         return entries
 
-    def kill_entries_cache(self, slug=None, tags=[]):
+    def kill_entries_cache(saved, self, slug=None, tags=[]):
         memcache.delete("entries/recent")
         memcache.delete("entries/main")
         memcache.delete("entries/archive")
+        if saved:
+            memcache.delete("entries/saved")
         if slug:
             memcache.delete("entry/%s" % slug)
         for tag in tags:
@@ -318,8 +320,12 @@ class SavedPageHandler(BaseRequestHandler):
 		
 	def get_saved_entries(self):
 		key = "entries/saved"
-		entries = db.Query(Entry).filter("public = ", False).order("-published")
+		entries = memcache.get(key)
+		if not entries:
+			entries = db.Query(Entry).filter("public = ", False).order("-published")
+			memcache.set(key, list(entries))
 		return entries
+
 
 class DeleteEntryHandler(BaseRequestHandler):
     @admin
@@ -328,7 +334,7 @@ class DeleteEntryHandler(BaseRequestHandler):
         try:
             entry = db.get(key)
             entry.delete()
-            self.kill_entries_cache(slug=entry.slug, tags=entry.tags)
+            self.kill_entries_cache(True, slug=entry.slug, tags=entry.tags)
             data = {"success": True}
         except db.BadKeyError:
             data = {"success": False}
@@ -427,16 +433,20 @@ class NewEntryHandler(BaseRequestHandler):
                     title=self.request.get("title"),
                     slug=slug,
                 )
+            saved = False
             if self.request.get("public") == "on":
 				#FIXME: Only updates after a second update since entry.updated hasn't been changed yet
-                if entry.public == False:
+               if entry.public == False:
                     entry.published = entry.updated
-                entry.public = True
+                    saved = True
+               entry.public = True
             else:
-	           entry.public = False
+				if entry.public == True:
+					saved = True
+				entry.public = False
             entry.tags = self.get_tags_argument("tags")
             entry.put()
-            self.kill_entries_cache(slug=entry.slug if key else None,
+            self.kill_entries_cache(saved, slug=entry.slug if key else None,
                 tags=entry.tags)
             if not key:
                 self.ping(entry)
