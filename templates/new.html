@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 
 {% block body %}
+	{% ifnotequal num_saved 0 %}
 	<!-- TODO: Make notify message active -->
-	{% block notify_message %}<div style="border: 1px solid #999;background-color: red;padding: 3px;text-align: center;font-size: 9pt;margin-bottom: 5px">You have <a href="saved.html">5 saved posts</a>.</div>{% endblock %}
+	{% block notify_message %}<div style="border: 1px solid #999;background-color: red;padding: 3px;text-align: center;font-size: 9pt;margin-bottom: 5px">You have <a href="saved.html">{{ num_saved }} saved posts</a>.</div>{% endblock %}
+	{% endifnotequal %}
     <form id="new" method="post">
         <table>
             {{ form.as_table }}

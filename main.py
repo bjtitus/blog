@@ -408,6 +408,7 @@ class NewEntryHandler(BaseRequestHandler):
             except db.BadKeyError:
                 return self.redirect("/new")
         extra_context["form"] = form
+        extra_context["num_saved"] = db.Query(Entry).filter("public = ", False).order("-published").count(100)
         self.render("edit.html" if key else "new.html", extra_context)
 
     @admin
