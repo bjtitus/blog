@@ -15,6 +15,7 @@ from django import newforms as forms
 from django.template.defaultfilters import slugify
 from django.utils import simplejson
 from django.utils.feedgenerator import Enclosure
+from datetime import datetime
 
 from google.appengine.api import memcache
 from google.appengine.api import urlfetch
@@ -318,6 +319,7 @@ class SavedPageHandler(BaseRequestHandler):
 		}
 		self.render("saved.html", extra_context)
 		
+	#TODO: Figure out why the hell this can't go in BaseRequestHandler	
 	def get_saved_entries(self):
 		key = "entries/saved"
 		entries = memcache.get(key)
@@ -352,6 +354,7 @@ class SaveEntryHandler(BaseRequestHandler):
 				entry.public = False
 			else:
 				entry.public = True
+				entry.published = datetime.now()
 			entry.put()
 			self.kill_entries_cache(True, slug=entry.slug, tags=entry.tags)
 			data = {"success": True}
@@ -455,9 +458,8 @@ class NewEntryHandler(BaseRequestHandler):
                 )
             saved = False
             if self.request.get("public") == "on":
-				#FIXME: Only updates after a second update since entry.updated hasn't been changed yet
                if entry.public == False:
-                    entry.published = entry.updated
+                    entry.published = datetime.now()
                     saved = True
                entry.public = True
             else:
