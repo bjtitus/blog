@@ -14,4 +14,12 @@ $(document).ready(function() {
             }
         });
     });
+	$('.save').click(function(l) {
+		var entry = $(this).parents('.entry');
+		$.postJSON('/save', {key: entry.attr('id')}, function(data) {
+			if (data.success) {
+				entry.slideUp();
+			}
+		});
+	});
 });

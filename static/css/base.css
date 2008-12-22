@@ -115,6 +115,13 @@ a.delete {
   background: url('../images/page_delete.png') left center no-repeat;
 }
 
+a.save {
+	padding-left: 20px;
+	background: url('../images/page_save.png') left center no-repeat;
+}
+
+.entry.full h1 a.save,
+.entry.full h1 a.save:visited,
 .entry.full h1 a.delete,
 .entry.full h1 a.delete:visited,
 .entry.full h1 a.edit,

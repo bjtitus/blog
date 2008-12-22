@@ -9,6 +9,7 @@
                 {% if admin %}
                     <a class="edit" href="/edit/{{ entry.key }}">edit</a>
                     <a class="delete" href="#">delete</a>
+					<a class="save" href="#">make {% if entry.public %}private{% else %}public{% endif %}</a>
                 {% endif %}
             </h1>
             <div class="date" title="{{ entry.published }}">

@@ -342,6 +342,25 @@ class DeleteEntryHandler(BaseRequestHandler):
         self.response.out.write(json)
 
 
+class SaveEntryHandler(BaseRequestHandler):
+	@admin
+	def post(self):
+		key = self.request.get("key")
+		try:
+			entry = db.get(key)
+			if entry.public:
+				entry.public = False
+			else:
+				entry.public = True
+			entry.put()
+			self.kill_entries_cache(True, slug=entry.slug, tags=entry.tags)
+			data = {"success": True}
+		except db.BadKeyError:
+			data = {"success": False}
+		json = simplejson.dumps(data)
+		self.response.out.write(json)
+
+
 class EntryPageHandler(BaseRequestHandler):
     def head(self, slug):
         entry = self.get_entry_from_slug(slug=slug)
@@ -494,6 +513,7 @@ application = webapp.WSGIApplication([
     ("/archive/?", ArchivePageHandler),
 	("/saved", SavedPageHandler),
     ("/delete/?", DeleteEntryHandler),
+	("/save/?", SaveEntryHandler),
     ("/edit/([\w-]+)/?", NewEntryHandler),
     ("/e/([\w-]+)/?", EntryPageHandler),
     ("/new/?", NewEntryHandler),
