@@ -117,7 +117,8 @@ a.delete {
 
 a.save {
 	padding-left: 20px;
-	background: url('../images/page_save.png') left center no-repeat;
+	background-position: left center;
+	background-repeat: no-repeat;
 }
 
 .entry.full h1 a.save,

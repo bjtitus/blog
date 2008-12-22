@@ -320,6 +320,7 @@ class SavedPageHandler(BaseRequestHandler):
 		self.render("saved.html", extra_context)
 		
 	#TODO: Figure out why the hell this can't go in BaseRequestHandler	
+	@admin
 	def get_saved_entries(self):
 		key = "entries/saved"
 		entries = memcache.get(key)
@@ -327,7 +328,6 @@ class SavedPageHandler(BaseRequestHandler):
 			entries = db.Query(Entry).filter("public = ", False).order("-published")
 			memcache.set(key, list(entries))
 		return entries
-
 
 class DeleteEntryHandler(BaseRequestHandler):
     @admin
@@ -513,7 +513,7 @@ class OpenSearchHandler(BaseRequestHandler):
 application = webapp.WSGIApplication([
     ("/", MainPageHandler),
     ("/archive/?", ArchivePageHandler),
-	("/saved", SavedPageHandler),
+	("/saved/?", SavedPageHandler), #CHANGED: From /saved to /saved/? to see if it makes a difference.
     ("/delete/?", DeleteEntryHandler),
 	("/save/?", SaveEntryHandler),
     ("/edit/([\w-]+)/?", NewEntryHandler),
