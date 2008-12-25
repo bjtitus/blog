@@ -169,7 +169,7 @@ class BaseRequestHandler(webapp.RequestHandler):
             memcache.set(key, list(entries))
         return entries
 
-    def kill_entries_cache(saved, self, slug=None, tags=[]):
+    def kill_entries_cache(self, saved, slug=None, tags=[]):
         memcache.delete("entries/recent")
         memcache.delete("entries/main")
         memcache.delete("entries/archive")
