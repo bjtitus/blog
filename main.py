@@ -108,25 +108,25 @@ class BaseRequestHandler(webapp.RequestHandler):
         key = "current_city/now"
         current_city = memcache.get(key)
         if not current_city:
-			if DOPPLR_TOKEN != "":
-				response = urlfetch.fetch("https://www.dopplr.com/api/traveller_info?format=js&token=" + BRIGHTKITE_TOKEN)
-				if response.status_code == 200:
-					data = simplejson.loads(response.content)
-					current_city = data["traveller"]["current_city"]
-					current_city["maps_api_key"] = MAPS_API_KEY
-					memcache.set(key, current_city, 60*60*5)
-				else:
-					current_city = None
-			elif BRIGHTKITE_TOKEN != "":
-				response = urlfetch.fetch("http://brightkite.com/people/" + BRIGHTKITE_TOKEN + "?format=json")
-				if response.status_code == 200:
-					data = simplejson.loads(response.content)
-					current_city = data["place"]
-					current_city["maps_api_key"] = MAPS_API_KEY
-					memcache.set(key, current_city, 60*60*5)
-				else:
-					current_city = None
-			return current_city
+            if DOPPLR_TOKEN != "":
+                response = urlfetch.fetch("https://www.dopplr.com/api/traveller_info?format=js&token=" + BRIGHTKITE_TOKEN)
+                if response.status_code == 200:
+                    data = simplejson.loads(response.content)
+                    current_city = data["traveller"]["current_city"]
+                    current_city["maps_api_key"] = MAPS_API_KEY
+                    memcache.set(key, current_city, 60*60*5)
+                else:
+                    current_city = None
+            elif BRIGHTKITE_TOKEN != "":
+                response = urlfetch.fetch("http://brightkite.com/people/" + BRIGHTKITE_TOKEN + "?format=json")
+                if response.status_code == 200:
+                    data = simplejson.loads(response.content)
+                    current_city = data["place"]
+                    current_city["maps_api_key"] = MAPS_API_KEY
+                    memcache.set(key, current_city, 60*60*5)
+                else:
+                    current_city = None
+            return current_city
 
     def get_recent_entries(self):
         key = "entries/recent"
@@ -326,21 +326,21 @@ class ArchivePageHandler(BaseRequestHandler):
 
 
 class SavedPageHandler(BaseRequestHandler):
-	def get(self):
-		extra_context = {
-			"entries": self.get_saved_entries(),
-		}
-		self.render("saved.html", extra_context)
-		
-	#TODO: Figure out why the hell this can't go in BaseRequestHandler	
-	@admin
-	def get_saved_entries(self):
-		key = "entries/saved"
-		entries = memcache.get(key)
-		if not entries:
-			entries = db.Query(Entry).filter("public = ", False).order("-published")
-			memcache.set(key, list(entries))
-		return entries
+    def get(self):
+        extra_context = {
+            "entries": self.get_saved_entries(),
+        }
+        self.render("saved.html", extra_context)
+        
+    #TODO: Figure out why the hell this can't go in BaseRequestHandler  
+    @admin
+    def get_saved_entries(self):
+        key = "entries/saved"
+        entries = memcache.get(key)
+        if not entries:
+            entries = db.Query(Entry).filter("public = ", False).order("-published")
+            memcache.set(key, list(entries))
+        return entries
 
 class DeleteEntryHandler(BaseRequestHandler):
     @admin
@@ -358,23 +358,23 @@ class DeleteEntryHandler(BaseRequestHandler):
 
 
 class SaveEntryHandler(BaseRequestHandler):
-	@admin
-	def post(self):
-		key = self.request.get("key")
-		try:
-			entry = db.get(key)
-			if entry.public:
-				entry.public = False
-			else:
-				entry.public = True
-				entry.published = datetime.now()
-			entry.put()
-			self.kill_entries_cache(True, slug=entry.slug, tags=entry.tags)
-			data = {"success": True}
-		except db.BadKeyError:
-			data = {"success": False}
-		json = simplejson.dumps(data)
-		self.response.out.write(json)
+    @admin
+    def post(self):
+        key = self.request.get("key")
+        try:
+            entry = db.get(key)
+            if entry.public:
+                entry.public = False
+            else:
+                entry.public = True
+                entry.published = datetime.now()
+            entry.put()
+            self.kill_entries_cache(True, slug=entry.slug, tags=entry.tags)
+            data = {"success": True}
+        except db.BadKeyError:
+            data = {"success": False}
+        json = simplejson.dumps(data)
+        self.response.out.write(json)
 
 
 class EntryPageHandler(BaseRequestHandler):
@@ -476,9 +476,9 @@ class NewEntryHandler(BaseRequestHandler):
                     saved = True
                entry.public = True
             else:
-				if entry.public == True:
-					saved = True
-				entry.public = False
+                if entry.public == True:
+                    saved = True
+                entry.public = False
             entry.tags = self.get_tags_argument("tags")
             entry.put()
             self.kill_entries_cache(saved, slug=entry.slug if key else None,
@@ -526,9 +526,9 @@ class OpenSearchHandler(BaseRequestHandler):
 application = webapp.WSGIApplication([
     ("/", MainPageHandler),
     ("/archive/?", ArchivePageHandler),
-	("/saved/?", SavedPageHandler), #CHANGED: From /saved to /saved/? to see if it makes a difference.
+    ("/saved/?", SavedPageHandler), #CHANGED: From /saved to /saved/? to see if it makes a difference.
     ("/delete/?", DeleteEntryHandler),
-	("/save/?", SaveEntryHandler),
+    ("/save/?", SaveEntryHandler),
     ("/edit/([\w-]+)/?", NewEntryHandler),
     ("/e/([\w-]+)/?", EntryPageHandler),
     ("/new/?", NewEntryHandler),
